@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>도자기 기록</title>
+<style>
+:root { color-scheme: light; }
+* { box-sizing: border-box; margin: 0; }
+body { font-family: "Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif; background:#faf8f5; color:#3a3226; padding:20px; font-size:14px; }
+h1 { font-size:20px; margin-bottom:4px; }
+.sub { color:#9a8f7d; font-size:12px; margin-bottom:16px; }
+.chips { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
+.chip { background:#fff; border:1px solid #e8e1d5; border-radius:10px; padding:10px 16px; min-width:110px; }
+.chip .n { font-size:18px; font-weight:700; color:#7a5c3d; }
+.chip .l { font-size:11px; color:#9a8f7d; }
+nav { display:flex; gap:6px; margin-bottom:14px; border-bottom:2px solid #e8e1d5; }
+nav button { border:none; background:none; padding:9px 14px; font-size:14px; cursor:pointer; color:#9a8f7d; border-bottom:2px solid transparent; margin-bottom:-2px; font-family:inherit; }
+nav button.on { color:#7a5c3d; font-weight:700; border-bottom-color:#7a5c3d; }
+.tab { display:none; }
+.tab.on { display:block; }
+form.add { background:#fff; border:1px solid #e8e1d5; border-radius:10px; padding:12px; display:flex; gap:8px; flex-wrap:wrap; align-items:flex-end; margin-bottom:14px; }
+form.add label { display:flex; flex-direction:column; font-size:11px; color:#9a8f7d; gap:3px; }
+form.add input, form.add select, form.add textarea { border:1px solid #ddd3c2; border-radius:6px; padding:6px 8px; font-size:13px; font-family:inherit; background:#fff; }
+form.add input[type=date] { width:130px; }
+form.add button { background:#7a5c3d; color:#fff; border:none; border-radius:6px; padding:8px 16px; font-size:13px; cursor:pointer; font-family:inherit; }
+.item { background:#fff; border:1px solid #e8e1d5; border-radius:10px; padding:10px 12px; margin-bottom:8px; display:flex; gap:10px; align-items:flex-start; }
+.item .d { font-size:12px; color:#9a8f7d; white-space:nowrap; padding-top:2px; }
+.item .body { flex:1; }
+.item .t { font-weight:600; }
+.item .m { font-size:13px; color:#6b6152; white-space:pre-wrap; }
+.del { border:none; background:none; color:#c9beac; cursor:pointer; font-size:14px; padding:2px; }
+.del:hover { color:#c0392b; }
+.badge { font-size:11px; background:#f0e9dd; color:#7a5c3d; border-radius:5px; padding:2px 7px; }
+.wcard { background:#fff; border:1px solid #e8e1d5; border-radius:12px; padding:14px; margin-bottom:10px; }
+.wtop { display:flex; justify-content:space-between; align-items:baseline; margin-bottom:8px; }
+.wname { font-size:15px; font-weight:700; }
+.winfo { font-size:12px; color:#9a8f7d; margin-bottom:10px; }
+.stages { display:flex; gap:4px; flex-wrap:wrap; margin-bottom:10px; }
+.st { font-size:12px; padding:4px 10px; border-radius:14px; background:#f3efe7; color:#b3a892; }
+.st.done { background:#e7dcc9; color:#7a5c3d; }
+.st.cur { background:#7a5c3d; color:#fff; font-weight:700; }
+.wbtns { display:flex; gap:6px; }
+.wbtns button { border:1px solid #ddd3c2; background:#fff; border-radius:6px; padding:5px 10px; font-size:12px; cursor:pointer; font-family:inherit; color:#6b6152; }
+.wbtns button.next { background:#7a5c3d; color:#fff; border-color:#7a5c3d; }
+.total { text-align:right; font-size:13px; color:#7a5c3d; font-weight:700; margin-bottom:10px; }
+.empty { color:#b3a892; font-size:13px; padding:16px; text-align:center; }
+.tag-chat { font-size:10px; color:#b3a892; }
+/* skill map */
+.track { background:#fff; border:1px solid #e8e1d5; border-radius:12px; padding:14px 16px; margin-bottom:12px; }
+.thead { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+.tname { font-size:14px; font-weight:700; }
+.tprog { font-size:11px; color:#9a8f7d; }
+.tbar { height:5px; background:#f0e9dd; border-radius:3px; margin-bottom:12px; overflow:hidden; }
+.tbar > div { height:100%; background:#7a5c3d; border-radius:3px; transition:width .3s; }
+.nodes { display:flex; flex-wrap:wrap; gap:0; align-items:center; }
+.node { display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; padding:4px 6px; border-radius:8px; width:86px; text-align:center; }
+.node:hover { background:#faf6ef; }
+.norb { width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:15px; border:2px solid #e2d9c8; background:#f7f3ea; color:#c9beac; }
+.node.learning .norb { border-color:#d4a017; background:#fdf6e3; }
+.node.cleared .norb { border-color:#7a5c3d; background:#7a5c3d; color:#fff; }
+.nname { font-size:11px; color:#8c8170; line-height:1.25; }
+.node.cleared .nname { color:#7a5c3d; font-weight:700; }
+.node.learning .nname { color:#a67c00; font-weight:600; }
+.nstate { font-size:9px; color:#c9beac; }
+.link { width:16px; height:2px; background:#e2d9c8; flex-shrink:0; margin-bottom:26px; }
+.link.done { background:#7a5c3d; }
+.smhint { font-size:11px; color:#b3a892; margin-bottom:12px; }
+.sectname { font-size:11px; font-weight:700; color:#a08c6e; letter-spacing:.5px; margin:10px 0 6px; padding-left:2px; }
+.sectname span { font-weight:400; color:#c9beac; margin-left:4px; }
+/* refs & theory */
+.secthead { font-size:13px; font-weight:700; color:#7a5c3d; margin:14px 0 8px; }
+.refcard a { color:#7a5c3d; font-weight:600; text-decoration:none; }
+.refcard a:hover { text-decoration:underline; }
+.pgrid { display:grid; grid-template-columns:repeat(auto-fill, minmax(120px,1fr)); gap:8px; }
+.pcell { position:relative; border:1px solid #e8e1d5; border-radius:10px; overflow:hidden; background:#fff; }
+.pcell img { width:100%; height:110px; object-fit:cover; display:block; cursor:pointer; }
+.pcell .pcap { font-size:10px; color:#9a8f7d; padding:4px 6px; }
+.pcell .del { position:absolute; top:2px; right:2px; background:rgba(255,255,255,.85); border-radius:50%; }
+.lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:99; align-items:center; justify-content:center; cursor:zoom-out; }
+.lightbox.on { display:flex; }
+.lightbox img { max-width:92%; max-height:92%; border-radius:8px; }
+</style>
+</head>
+<body>
+<h1>🏺 도자기 기록</h1>
+<div class="sub">수업 · 연습 · 작품 · 비용 관리</div>
+
+<div class="chips">
+  <div class="chip"><div class="n" id="cWorks">0</div><div class="l">진행 중 작품</div></div>
+  <div class="chip"><div class="n" id="cHours">0h</div><div class="l">이번 달 연습</div></div>
+  <div class="chip"><div class="n" id="cSpend">0원</div><div class="l">이번 달 지출</div></div>
+  <div class="chip"><div class="n" id="cSkills">0/0</div><div class="l">스킬 클리어</div></div>
+</div>
+
+<nav>
+  <button data-t="lessons" class="on">수업 기록</button>
+  <button data-t="practice">연습 로그</button>
+  <button data-t="refs">레퍼런스</button>
+  <button data-t="theory">이론 노트</button>
+  <button data-t="skills">스킬맵</button>
+  <button data-t="works">작품 진행</button>
+  <button data-t="expenses">비용</button>
+</nav>
+
+<div class="tab" id="tab-works">
+  <form class="add" id="fWork">
+    <label>작품명<input name="name" required placeholder="예: 백자 머그컵"></label>
+    <label>흙<input name="clay" placeholder="예: 백자토" style="width:100px"></label>
+    <label>유약<input name="glaze" placeholder="예: 투명유" style="width:100px"></label>
+    <label>시작일<input type="date" name="date"></label>
+    <button>+ 작품 추가</button>
+  </form>
+  <div id="lWorks"></div>
+</div>
+
+<div class="tab" id="tab-skills">
+  <div class="smhint">노드를 클릭하면 미시작 → 🔥 배우는 중 → ✓ 클리어 순으로 바뀌어요.</div>
+  <div id="lSkills"></div>
+</div>
+
+<div class="tab" id="tab-refs">
+  <form class="add" id="fRef">
+    <label>제목<input name="title" required placeholder="예: 백자 화병 레퍼런스" style="width:160px"></label>
+    <label>링크(핀터레스트 등)<input name="url" type="url" placeholder="https://..." style="width:200px"></label>
+    <label>태그<input name="tag" placeholder="예: 물레, 형태" style="width:90px"></label>
+    <label style="flex:1;min-width:140px">메모<input name="memo"></label>
+    <button>+ 링크 저장</button>
+  </form>
+  <form class="add">
+    <label>📷 직접 찍은 사진 추가 (자동 압축 저장)<input type="file" id="photoIn" accept="image/*" multiple></label>
+  </form>
+  <div class="secthead">📌 링크</div>
+  <div id="lRefs"></div>
+  <div class="secthead">📷 사진</div>
+  <div class="pgrid" id="lPhotos"></div>
+</div>
+
+<div class="tab" id="tab-theory">
+  <form class="add" id="fTheory">
+    <label>날짜<input type="date" name="date" required></label>
+    <label>출처<input name="source" required placeholder="예: ○○공방 원데이 워크샵" style="width:170px"></label>
+    <label>주제<input name="topic" required placeholder="예: 유약의 3요소" style="width:140px"></label>
+    <label style="flex:1;min-width:220px">내용<textarea name="notes" rows="2" style="width:100%" placeholder="배운 이론 내용"></textarea></label>
+    <button>+ 기록</button>
+  </form>
+  <form class="add">
+    <label>📷 필기·자료 사진 추가 (자동 압축 저장)<input type="file" id="theoryPhotoIn" accept="image/*" multiple></label>
+  </form>
+  <div class="secthead">📝 노트</div>
+  <div id="lTheory"></div>
+  <div class="secthead">📷 필기·자료 사진</div>
+  <div class="pgrid" id="lTheoryPhotos"></div>
+</div>
+
+<div class="lightbox" id="lightbox"><img></div>
+
+<div class="tab on" id="tab-lessons">
+  <form class="add" id="fLesson">
+    <label>날짜<input type="date" name="date" required></label>
+    <label>주제<input name="topic" required placeholder="예: 물레 중심잡기" style="width:160px"></label>
+    <label style="flex:1;min-width:200px">배운 내용 / 피드백<input name="notes" placeholder="메모"></label>
+    <button>+ 기록</button>
+  </form>
+  <div id="lLessons"></div>
+</div>
+
+<div class="tab" id="tab-practice">
+  <div class="total" id="tPractice"></div>
+  <form class="add" id="fPractice">
+    <label>날짜<input type="date" name="date" required></label>
+    <label>시간(h)<input type="number" name="hours" step="0.5" min="0" required style="width:70px"></label>
+    <label style="flex:1;min-width:200px">연습 내용<input name="notes" placeholder="예: 중심잡기 반복, 실린더 5개"></label>
+    <button>+ 기록</button>
+  </form>
+  <div id="lPractice"></div>
+</div>
+
+<div class="tab" id="tab-expenses">
+  <div class="total" id="tExpense"></div>
+  <form class="add" id="fExpense">
+    <label>날짜<input type="date" name="date" required></label>
+    <label>분류<select name="cat"><option>수강료</option><option>공방 쉐어비</option><option>재료비</option><option>소성비</option><option>도구</option><option>기타</option></select></label>
+    <label>금액(원)<input type="number" name="amount" required style="width:100px"></label>
+    <label style="flex:1;min-width:160px">메모<input name="memo"></label>
+    <button>+ 기록</button>
+  </form>
+  <div id="lExpenses"></div>
+</div>
+
+<script>
+const STAGES = ["성형","건조","초벌","시유","재벌","완성"];
+/*SEED_START*/
+const SEED = {"lessons":[],"practice":[],"works":[],"expenses":[],"skills":{},"refs":[],"theory":[]};
+/*SEED_END*/
+const SKILLS = [
+ {track:"기초 다지기", icon:"🪨", sections:[
+   {name:"기초", items:[
+     {id:"b1", name:"흙 반죽·꼬막밀기"},
+     {id:"b2", name:"도구 다루기"},
+     {id:"b4", name:"흙 수분·상태 관리"},
+     {id:"b3", name:"흙 재활용(리클레임)"}]}]},
+ {track:"물레", icon:"🌀", sections:[
+   {name:"기초", items:[
+     {id:"t9", name:"물레용 반죽·붙이기"},
+     {id:"t1", name:"중심잡기"},
+     {id:"t2", name:"코어링·바닥"},
+     {id:"t3", name:"실린더 뽑기"}]},
+   {name:"형태 발전", items:[
+     {id:"t4", name:"사발·볼"},
+     {id:"t10", name:"접시 넓히기"},
+     {id:"t11", name:"화병·목 조이기"},
+     {id:"t15", name:"잼대 만들기·활용"},
+     {id:"t6", name:"같은 형태 반복"}]},
+   {name:"정형·마무리", items:[
+     {id:"t5", name:"굽깎기"},
+     {id:"t12", name:"다양한 굽 형태"}]},
+   {name:"심화", items:[
+     {id:"t7", name:"뚜껑 맞추기"},
+     {id:"t8", name:"손잡이·부속"},
+     {id:"t13", name:"주전자 조립"},
+     {id:"t14", name:"대형·분할 성형"}]}]},
+ {track:"핸드빌딩", icon:"🤲", sections:[
+   {name:"기초", items:[
+     {id:"h1", name:"핀칭"},
+     {id:"h2", name:"코일링"},
+     {id:"h3", name:"판성형(슬랩)"},
+     {id:"h4", name:"이장 접합"}]},
+   {name:"형태 발전", items:[
+     {id:"h6", name:"쿠리누키"},
+     {id:"h7", name:"두드리기 성형"},
+     {id:"h8", name:"험프몰드"},
+     {id:"h9", name:"슬럼프몰드"}]},
+   {name:"심화", items:[
+     {id:"h5", name:"대형 조형"},
+     {id:"h10", name:"물레+핸드빌딩 복합"},
+     {id:"h11", name:"조각적 조형"}]}]},
+ {track:"시유와 테스트", icon:"💧", sections:[
+   {name:"기초", items:[
+     {id:"g1", name:"시유 기초(담금·붓기)"},
+     {id:"g6", name:"유약 두께 조절"}]},
+   {name:"발전", items:[
+     {id:"g2", name:"스프레이 시유"},
+     {id:"g7", name:"왁스 레지스트"},
+     {id:"g3", name:"유약 겹치기·조합"}]},
+   {name:"테스트", items:[
+     {id:"g8", name:"유약 시편 테스트"},
+     {id:"g11", name:"유약 조합 기록·관리"}]}]},
+ {track:"소성", icon:"🔥", sections:[
+   {name:"기초", items:[
+     {id:"g5", name:"초벌 이해"},
+     {id:"g4", name:"소성 곡선·온도 이해"},
+     {id:"g9", name:"가마 재임"}]},
+   {name:"심화", items:[
+     {id:"g12", name:"전기가마 운용"},
+     {id:"g10", name:"산화·환원 이해"},
+     {id:"g13", name:"소성 결과 분석"}]}]},
+ {track:"장식", icon:"🎨", sections:[
+   {name:"기초", items:[
+     {id:"d1", name:"화장토(슬립)·안료"},
+     {id:"d2", name:"음각·선각"}]},
+   {name:"발전", items:[
+     {id:"d3", name:"상감"},
+     {id:"d7", name:"인화문(도장)"},
+     {id:"d8", name:"스그라피토"},
+     {id:"d9", name:"연리문(마블링)"}]},
+   {name:"심화", items:[
+     {id:"d4", name:"전사"},
+     {id:"d10", name:"금채·상회 등 특수 기법"}]}]},
+ {track:"창작 연습", icon:"✨", sections:[
+   {name:"아이디어", items:[
+     {id:"c1", name:"드로잉·아이디어 스케치"},
+     {id:"c9", name:"모형 스케치·도면(작업 전)"},
+     {id:"c2", name:"레퍼런스 리서치"}]},
+   {name:"발전", items:[
+     {id:"c3", name:"모작·재해석"},
+     {id:"c4", name:"시리즈 기획·제작"},
+     {id:"c5", name:"나만의 형태 개발"}]},
+   {name:"심화", items:[
+     {id:"c6", name:"개인 스타일 구축"},
+     {id:"c7", name:"포트폴리오·아카이빙"},
+     {id:"c8", name:"전시·판매 도전"}]}]},
+];
+const LSKEY = "pottery-log-v1";
+function emptyLocal(){ return {lessons:[],practice:[],works:[],expenses:[],overrides:{},deleted:[],skillStates:{},refs:[],theory:[],photos:[],theoryPhotos:[]}; }
+function loadLocal(){ try { const d = JSON.parse(localStorage.getItem(LSKEY)); return Object.assign(emptyLocal(), d||{}); } catch(e){ return emptyLocal(); } }
+let L = loadLocal();
+function save(){
+  try { localStorage.setItem(LSKEY, JSON.stringify(L)); }
+  catch(e){ alert("저장 공간이 가득 찼어요. 오래된 사진을 몇 장 삭제해주세요."); }
+  render();
+}
+function uid(p){ return p + "-" + Date.now() + "-" + Math.floor(Math.random()*1000); }
+function merged(kind){
+  const seed = (SEED[kind]||[]).filter(x => !L.deleted.includes(x.id)).map(x => Object.assign({}, x, L.overrides[x.id]||{}, {_seed:true}));
+  return seed.concat(L[kind]||[]);
+}
+function byDate(a,b){ return (b.date||"").localeCompare(a.date||""); }
+function today(){ return new Date().toISOString().slice(0,10); }
+function thisMonth(d){ return (d||"").slice(0,7) === today().slice(0,7); }
+function esc(s){ return String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function won(n){ return Number(n||0).toLocaleString("ko-KR") + "원"; }
+
+function removeItem(kind, id, isSeed){
+  if(!confirm("삭제할까요?")) return;
+  if(isSeed){ L.deleted.push(id); } else { L[kind] = L[kind].filter(x=>x.id!==id); }
+  save();
+}
+function moveStage(id, isSeed, dir){
+  const all = merged("works"); const w = all.find(x=>x.id===id); if(!w) return;
+  let i = STAGES.indexOf(w.stage); i = Math.min(STAGES.length-1, Math.max(0, i+dir));
+  if(isSeed){ L.overrides[id] = Object.assign({}, L.overrides[id], {stage: STAGES[i]}); }
+  else { const t = L.works.find(x=>x.id===id); if(t) t.stage = STAGES[i]; }
+  save();
+}
+
+function skillState(id){ return L.skillStates[id] || (SEED.skills||{})[id] || "none"; }
+function cycleSkill(id){
+  const cur = skillState(id);
+  L.skillStates[id] = cur === "none" ? "learning" : cur === "learning" ? "cleared" : "none";
+  save();
+}
+function renderSkills(){
+  const el = document.getElementById("lSkills");
+  el.innerHTML = "";
+  let total = 0, cleared = 0;
+  SKILLS.forEach(tr=>{
+    const allItems = tr.sections.flatMap(s=>s.items);
+    const done = allItems.filter(i=>skillState(i.id)==="cleared").length;
+    total += allItems.length; cleared += done;
+    const div = document.createElement("div"); div.className = "track";
+    div.innerHTML = `<div class="thead"><span class="tname">${tr.icon} ${tr.track}</span><span class="tprog">${done}/${allItems.length} 클리어</span></div>
+      <div class="tbar"><div style="width:${allItems.length?Math.round(done/allItems.length*100):0}%"></div></div>`;
+    tr.sections.forEach(sec=>{
+      const sdone = sec.items.filter(i=>skillState(i.id)==="cleared").length;
+      const lbl = document.createElement("div");
+      lbl.className = "sectname";
+      lbl.innerHTML = `${esc(sec.name)} <span>${sdone}/${sec.items.length}</span>`;
+      div.appendChild(lbl);
+      const nodes = document.createElement("div");
+      nodes.className = "nodes";
+      sec.items.forEach((it, idx)=>{
+        if(idx > 0){
+          const link = document.createElement("div");
+          link.className = "link" + (skillState(sec.items[idx-1].id)==="cleared" ? " done" : "");
+          nodes.appendChild(link);
+        }
+        const st = skillState(it.id);
+        const n = document.createElement("div");
+        n.className = "node " + (st==="none"?"":st);
+        n.innerHTML = `<div class="norb">${st==="cleared"?"✓":st==="learning"?"🔥":"·"}</div>
+          <div class="nname">${esc(it.name)}</div>
+          <div class="nstate">${st==="cleared"?"클리어!":st==="learning"?"배우는 중":"미시작"}</div>`;
+        n.onclick = ()=>cycleSkill(it.id);
+        nodes.appendChild(n);
+      });
+      div.appendChild(nodes);
+    });
+    el.appendChild(div);
+  });
+  document.getElementById("cSkills").textContent = cleared + "/" + total;
+}
+function render(){
+  renderSkills();
+  // summary
+  const works = merged("works");
+  document.getElementById("cWorks").textContent = works.filter(w=>w.stage!=="완성").length;
+  const hrs = merged("practice").filter(p=>thisMonth(p.date)).reduce((s,p)=>s+Number(p.hours||0),0);
+  document.getElementById("cHours").textContent = hrs + "h";
+  const sp = merged("expenses").filter(e=>thisMonth(e.date)).reduce((s,e)=>s+Number(e.amount||0),0);
+  document.getElementById("cSpend").textContent = won(sp);
+
+  // works
+  const lw = document.getElementById("lWorks");
+  lw.innerHTML = works.length ? "" : '<div class="empty">진행 중인 작품이 없어요. 첫 작품을 추가해보세요!</div>';
+  works.sort(byDate).forEach(w=>{
+    const ci = STAGES.indexOf(w.stage);
+    const div = document.createElement("div"); div.className = "wcard";
+    div.innerHTML = `<div class="wtop"><span class="wname">${esc(w.name)}</span>
+      <button class="del" title="삭제">✕</button></div>
+      <div class="winfo">${esc(w.clay||"흙 미정")} · ${esc(w.glaze||"유약 미정")} · 시작 ${esc(w.date||"-")}${w.notes?` · ${esc(w.notes)}`:""}</div>
+      <div class="stages">${STAGES.map((s,i)=>`<span class="st ${i<ci?"done":i===ci?"cur":""}">${s}</span>`).join("")}</div>
+      <div class="wbtns"><button class="prev">◀ 이전 단계</button><button class="next">다음 단계 ▶</button></div>`;
+    div.querySelector(".del").onclick = ()=>removeItem("works", w.id, w._seed);
+    div.querySelector(".prev").onclick = ()=>moveStage(w.id, w._seed, -1);
+    div.querySelector(".next").onclick = ()=>moveStage(w.id, w._seed, 1);
+    lw.appendChild(div);
+  });
+
+  // lessons
+  fillList("lLessons", merged("lessons").sort(byDate), x=>`<div class="t">${esc(x.topic)}</div><div class="m">${esc(x.notes||"")}</div>`, "lessons");
+  // practice
+  fillList("lPractice", merged("practice").sort(byDate), x=>`<div class="t">${esc(x.hours)}시간</div><div class="m">${esc(x.notes||"")}</div>`, "practice");
+  document.getElementById("tPractice").textContent = "이번 달 누적: " + hrs + "시간";
+  // expenses
+  fillList("lExpenses", merged("expenses").sort(byDate), x=>`<div class="t"><span class="badge">${esc(x.cat)}</span> ${won(x.amount)}</div><div class="m">${esc(x.memo||"")}</div>`, "expenses");
+  document.getElementById("tExpense").textContent = "이번 달 지출: " + won(sp);
+  // refs
+  fillList("lRefs", merged("refs").sort(byDate), x=>`<div class="t refcard">${x.url?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)} ↗</a>`:esc(x.title)}${x.tag?` <span class="badge">${esc(x.tag)}</span>`:""}</div><div class="m">${esc(x.memo||"")}</div>`, "refs");
+  // theory
+  fillList("lTheory", merged("theory").sort(byDate), x=>`<div class="t">${esc(x.topic)} <span class="badge">${esc(x.source)}</span></div><div class="m">${esc(x.notes||"")}</div>`, "theory");
+  // photos
+  renderPhotoGrid("lPhotos", "photos");
+  renderPhotoGrid("lTheoryPhotos", "theoryPhotos");
+}
+function renderPhotoGrid(gridId, listKey){
+  const pg = document.getElementById(gridId);
+  const list = L[listKey] || [];
+  pg.innerHTML = list.length ? "" : '<div class="empty" style="grid-column:1/-1">아직 사진이 없어요.</div>';
+  list.slice().reverse().forEach(p=>{
+    const cell = document.createElement("div"); cell.className = "pcell";
+    const img = document.createElement("img"); img.src = p.src;
+    img.onclick = ()=>{ const lb = document.getElementById("lightbox"); lb.querySelector("img").src = p.src; lb.classList.add("on"); };
+    const cap = document.createElement("div"); cap.className = "pcap"; cap.textContent = (p.date||"") + " " + (p.name||"");
+    const del = document.createElement("button"); del.className = "del"; del.textContent = "✕";
+    del.onclick = ()=>{ if(confirm("삭제할까요?")){ L[listKey] = L[listKey].filter(x=>x.id!==p.id); save(); } };
+    cell.appendChild(img); cell.appendChild(cap); cell.appendChild(del);
+    pg.appendChild(cell);
+  });
+}
+document.getElementById("lightbox").onclick = function(){ this.classList.remove("on"); };
+function hookPhotoInput(inputId, listKey){
+  document.getElementById(inputId).addEventListener("change", e=>{
+    [...e.target.files].forEach(file=>{
+      const reader = new FileReader();
+      reader.onload = ev=>{
+        const im = new Image();
+        im.onload = ()=>{
+          const max = 800, sc = Math.min(1, max/Math.max(im.width, im.height));
+          const cv = document.createElement("canvas");
+          cv.width = Math.round(im.width*sc); cv.height = Math.round(im.height*sc);
+          cv.getContext("2d").drawImage(im, 0, 0, cv.width, cv.height);
+          L[listKey].push({id:uid("ph"), date:today(), name:file.name.replace(/\.[^.]+$/,""), src:cv.toDataURL("image/jpeg", 0.72)});
+          save();
+        };
+        im.src = ev.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+    e.target.value = "";
+  });
+}
+hookPhotoInput("photoIn", "photos");
+hookPhotoInput("theoryPhotoIn", "theoryPhotos");
+function fillList(elId, arr, tpl, kind){
+  const el = document.getElementById(elId);
+  el.innerHTML = arr.length ? "" : '<div class="empty">아직 기록이 없어요.</div>';
+  arr.forEach(x=>{
+    const div = document.createElement("div"); div.className = "item";
+    div.innerHTML = `<span class="d">${esc(x.date||"-")}</span><div class="body">${tpl(x)}${x._seed?'<span class="tag-chat">💬 채팅 기록</span>':""}</div><button class="del">✕</button>`;
+    div.querySelector(".del").onclick = ()=>removeItem(kind, x.id, x._seed);
+    el.appendChild(div);
+  });
+}
+
+// tabs
+document.querySelectorAll("nav button").forEach(b=>{
+  b.onclick = ()=>{
+    document.querySelectorAll("nav button").forEach(x=>x.classList.remove("on"));
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("on"));
+    b.classList.add("on");
+    document.getElementById("tab-"+b.dataset.t).classList.add("on");
+  };
+});
+
+// forms
+function hook(fid, kind, build){
+  document.getElementById(fid).onsubmit = e=>{
+    e.preventDefault();
+    const f = new FormData(e.target);
+    L[kind].push(build(f));
+    e.target.reset(); setDates(); save();
+  };
+}
+hook("fWork","works", f=>({id:uid("w"), name:f.get("name"), clay:f.get("clay"), glaze:f.get("glaze"), date:f.get("date")||today(), stage:"성형", notes:""}));
+hook("fLesson","lessons", f=>({id:uid("le"), date:f.get("date"), topic:f.get("topic"), notes:f.get("notes")}));
+hook("fPractice","practice", f=>({id:uid("p"), date:f.get("date"), hours:Number(f.get("hours")), notes:f.get("notes")}));
+hook("fExpense","expenses", f=>({id:uid("e"), date:f.get("date"), cat:f.get("cat"), amount:Number(f.get("amount")), memo:f.get("memo")}));
+hook("fRef","refs", f=>({id:uid("r"), date:today(), title:f.get("title"), url:f.get("url"), tag:f.get("tag"), memo:f.get("memo")}));
+hook("fTheory","theory", f=>({id:uid("th"), date:f.get("date"), source:f.get("source"), topic:f.get("topic"), notes:f.get("notes")}));
+
+function setDates(){ document.querySelectorAll('input[type=date]').forEach(i=>{ if(!i.value) i.value = today(); }); }
+setDates();
+render();
+</script>
+</body>
+</html>
