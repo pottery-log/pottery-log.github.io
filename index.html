@@ -80,6 +80,8 @@ form.add button { background:#7a5c3d; color:#fff; border:none; border-radius:6px
 .lightbox { display:none; position:fixed; inset:0; background:rgba(0,0,0,.75); z-index:99; align-items:center; justify-content:center; cursor:zoom-out; }
 .lightbox.on { display:flex; }
 .lightbox img { max-width:92%; max-height:92%; border-radius:8px; }
+.pdfbox { height:110px; display:flex; align-items:center; justify-content:center; font-size:36px; cursor:pointer; background:#fdf9f2; }
+.pdfbox:hover { background:#f7efe1; }
 </style>
 </head>
 <body>
@@ -141,15 +143,16 @@ form.add button { background:#7a5c3d; color:#fff; border:none; border-radius:6px
     <label>날짜<input type="date" name="date" required></label>
     <label>출처<input name="source" required placeholder="예: ○○공방 원데이 워크샵" style="width:170px"></label>
     <label>주제<input name="topic" required placeholder="예: 유약의 3요소" style="width:140px"></label>
-    <label style="flex:1;min-width:220px">내용<textarea name="notes" rows="2" style="width:100%" placeholder="배운 이론 내용"></textarea></label>
+    <label>문서 링크(구글독스 등)<input name="link" type="url" placeholder="https://docs.google.com/..." style="width:200px"></label>
+    <label style="flex:1;min-width:180px">내용·요약 (선택)<textarea name="notes" rows="2" style="width:100%" placeholder="한 줄 요약이나 메모"></textarea></label>
     <button>+ 기록</button>
   </form>
   <form class="add">
-    <label>📷 필기·자료 사진 추가 (자동 압축 저장)<input type="file" id="theoryPhotoIn" accept="image/*" multiple></label>
+    <label>📷 사진·PDF 추가 (사진은 자동 압축, PDF는 3MB 이하)<input type="file" id="theoryPhotoIn" accept="image/*,.pdf" multiple></label>
   </form>
   <div class="secthead">📝 노트</div>
   <div id="lTheory"></div>
-  <div class="secthead">📷 필기·자료 사진</div>
+  <div class="secthead">📷 필기·자료 (사진/PDF)</div>
   <div class="pgrid" id="lTheoryPhotos"></div>
 </div>
 
@@ -398,7 +401,7 @@ function render(){
   // refs
   fillList("lRefs", merged("refs").sort(byDate), x=>`<div class="t refcard">${x.url?`<a href="${esc(x.url)}" target="_blank" rel="noopener">${esc(x.title)} ↗</a>`:esc(x.title)}${x.tag?` <span class="badge">${esc(x.tag)}</span>`:""}</div><div class="m">${esc(x.memo||"")}</div>`, "refs");
   // theory
-  fillList("lTheory", merged("theory").sort(byDate), x=>`<div class="t">${esc(x.topic)} <span class="badge">${esc(x.source)}</span></div><div class="m">${esc(x.notes||"")}</div>`, "theory");
+  fillList("lTheory", merged("theory").sort(byDate), x=>`<div class="t refcard">${esc(x.topic)} <span class="badge">${esc(x.source)}</span>${x.link?` <a href="${esc(x.link)}" target="_blank" rel="noopener">문서 열기 ↗</a>`:""}</div><div class="m">${esc(x.notes||"")}</div>`, "theory");
   // photos
   renderPhotoGrid("lPhotos", "photos");
   renderPhotoGrid("lTheoryPhotos", "theoryPhotos");
@@ -409,12 +412,27 @@ function renderPhotoGrid(gridId, listKey){
   pg.innerHTML = list.length ? "" : '<div class="empty" style="grid-column:1/-1">아직 사진이 없어요.</div>';
   list.slice().reverse().forEach(p=>{
     const cell = document.createElement("div"); cell.className = "pcell";
-    const img = document.createElement("img"); img.src = p.src;
-    img.onclick = ()=>{ const lb = document.getElementById("lightbox"); lb.querySelector("img").src = p.src; lb.classList.add("on"); };
+    if(p.type === "pdf"){
+      const box = document.createElement("div"); box.className = "pdfbox"; box.textContent = "📄";
+      box.title = "클릭해서 열기";
+      box.onclick = ()=>{
+        const bin = atob(p.src.split(",")[1]);
+        const arr = new Uint8Array(bin.length);
+        for(let i=0;i<bin.length;i++) arr[i] = bin.charCodeAt(i);
+        const url = URL.createObjectURL(new Blob([arr], {type:"application/pdf"}));
+        const w = window.open(url, "_blank");
+        if(!w){ const a = document.createElement("a"); a.href = url; a.download = (p.name||"자료")+".pdf"; a.click(); }
+      };
+      cell.appendChild(box);
+    } else {
+      const img = document.createElement("img"); img.src = p.src;
+      img.onclick = ()=>{ const lb = document.getElementById("lightbox"); lb.querySelector("img").src = p.src; lb.classList.add("on"); };
+      cell.appendChild(img);
+    }
     const cap = document.createElement("div"); cap.className = "pcap"; cap.textContent = (p.date||"") + " " + (p.name||"");
     const del = document.createElement("button"); del.className = "del"; del.textContent = "✕";
     del.onclick = ()=>{ if(confirm("삭제할까요?")){ L[listKey] = L[listKey].filter(x=>x.id!==p.id); save(); } };
-    cell.appendChild(img); cell.appendChild(cap); cell.appendChild(del);
+    cell.appendChild(cap); cell.appendChild(del);
     pg.appendChild(cell);
   });
 }
@@ -422,6 +440,13 @@ document.getElementById("lightbox").onclick = function(){ this.classList.remove(
 function hookPhotoInput(inputId, listKey){
   document.getElementById(inputId).addEventListener("change", e=>{
     [...e.target.files].forEach(file=>{
+      if(file.type === "application/pdf"){
+        if(file.size > 3*1024*1024){ alert(`"${file.name}"은 3MB를 넘어서 저장할 수 없어요. 큰 PDF는 깃허브 저장소에 올려서 링크로 추가하는 걸 추천해요.`); return; }
+        const r = new FileReader();
+        r.onload = ev=>{ L[listKey].push({id:uid("ph"), date:today(), name:file.name.replace(/\.[^.]+$/,""), type:"pdf", src:ev.target.result}); save(); };
+        r.readAsDataURL(file);
+        return;
+      }
       const reader = new FileReader();
       reader.onload = ev=>{
         const im = new Image();
@@ -477,7 +502,7 @@ hook("fLesson","lessons", f=>({id:uid("le"), date:f.get("date"), topic:f.get("to
 hook("fPractice","practice", f=>({id:uid("p"), date:f.get("date"), hours:Number(f.get("hours")), notes:f.get("notes")}));
 hook("fExpense","expenses", f=>({id:uid("e"), date:f.get("date"), cat:f.get("cat"), amount:Number(f.get("amount")), memo:f.get("memo")}));
 hook("fRef","refs", f=>({id:uid("r"), date:today(), title:f.get("title"), url:f.get("url"), tag:f.get("tag"), memo:f.get("memo")}));
-hook("fTheory","theory", f=>({id:uid("th"), date:f.get("date"), source:f.get("source"), topic:f.get("topic"), notes:f.get("notes")}));
+hook("fTheory","theory", f=>({id:uid("th"), date:f.get("date"), source:f.get("source"), topic:f.get("topic"), link:f.get("link"), notes:f.get("notes")}));
 
 function setDates(){ document.querySelectorAll('input[type=date]').forEach(i=>{ if(!i.value) i.value = today(); }); }
 setDates();
