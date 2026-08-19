@@ -1,4 +1,11 @@
 <!DOCTYPE html>
+<script type="application/json" id="cowork-artifact-meta">
+{
+  "name": "Pottery Dashboard",
+  "schemaVersion": 1,
+  "description": "도자기 학습·작업 관리 대시보드 — 수업 기록, 연습 로그, 작품 단계 추적(성형→건조→초벌→시유→재벌→완성), 비용 가계부. 직접 입력은 localStorage에 저장되고, 채팅으로 말한 기록은 Claude가 SEED 데이터로 반영."
+}
+</script>
 <html lang="ko">
 <head>
 <meta charset="utf-8">
@@ -194,7 +201,7 @@ form.add button { background:#7a5c3d; color:#fff; border:none; border-radius:6px
 <script>
 const STAGES = ["성형","건조","초벌","시유","재벌","완성"];
 /*SEED_START*/
-const SEED = {"lessons":[],"practice":[],"works":[],"expenses":[],"skills":{},"refs":[],"theory":[]};
+const SEED = {"lessons": [{"id": "le-s1", "date": "2026-08-12", "topic": "도예 이론 강의 (소성 집중)", "notes": "공방 이론 강의 수강. 슬라이드 18장 촬영분 포함해 정리노트(docx) 작성 완료. 소성 파트는 속설이 많아 직접 기록·검증이 중요하다는 태도 강조."}], "practice": [], "works": [], "expenses": [], "skills": {}, "refs": [], "theory": [{"id": "th-s1", "date": "2026-08-12", "source": "공방 도예 이론 강의", "topic": "흙의 구조·건조 수축·소성·유약 이론", "link": "", "notes": "카올리나이트/할로이사이트 구조, 1차·2차 점토와 백자토. 건조 수축 ~20%·부위별 건조 순서·접합은 손잡이가 더 촉촉하게. 물레 결: 시계방향 기준 위로 갈수록 왼쪽으로 비틀림(좁힌 목은 오른쪽). 소성: 초벌 850~900℃(기공 유지), 재벌 ~1300℃(수축·변형 구간). 히트워크=온도×시간, 콘으로 실제 열량 측정(콘8≈1249℃=통상 1250℃), 고온 승온 60℃/hr 권장. 냉각 주의: 573℃ 석영 전이, 270~200℃ 크리스토발라이트 전이. 환원소성=불완전 연소→CO가 산소를 빼앗아 발색 변화, 환기 필수. 과제: 콘을 층별 배치해 내 가마 열량·위치별 편차 확인."}, {"id": "th-s2", "date": "2026-08-19", "source": "강의 자료(구글 독스) 재구성", "topic": "도자기 제작 공정·소지·유약·안료·전사지·시유·가마 총정리", "link": "https://docs.google.com/document/d/18qapxYj-k2wbDM-nTgdDeLiICHMWF-lrVKCSohyEoII/edit", "notes": "현대 7단계/전통 9단계 제작 공정, 성형 기법 8종, 도구 14종, 소지 6종(청자토·백자토·석기토·산청토·옹기토·자기토). 유약 3대 원료(규석질 뼈대+장석질 융제+석회질 광택)와 분류·발색 원리 4종, 생유 vs 프릿트유. 안료 4유형과 원소별 발색(철이 가장 다채로움). 전사지 하회/중회/상회. 시유 방법 6종·비중 B'e 38~45·굽 유약 제거. 화염색-온도(SK콘), 셔틀가마 소성 곡선(산화→약환원→soaking→200℃/h 급랭). 정리본: 도자기 제작 참고노트(docx/html/pdf), 사이드바 아티팩트 'Pottery Making Reference'."}]};
 /*SEED_END*/
 const SKILLS = [
  {track:"기초 다지기", icon:"🪨", sections:[
